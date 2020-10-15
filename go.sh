@@ -104,11 +104,17 @@ archAffix(){
         x86_64|amd64)
             echo '64'
         ;;
-        *armv7*|armv6l)
-            echo 'arm'
+        armv5tel)
+            echo 'arm32-v5'
         ;;
-        *armv8*|aarch64)
-            echo 'arm64'
+        armv6l)
+            echo 'arm32-v6'
+        ;;
+        armv7|armv7l)
+            echo 'arm32-v7a'
+        ;;
+        armv8|aarch64)
+            echo 'arm64-v8a'
         ;;
         *mips64le*)
             echo 'mips64le'
@@ -130,6 +136,9 @@ archAffix(){
         ;;
         ppc64)
             echo 'ppc64'
+        ;;
+        riscv64)
+            echo 'riscv64'
         ;;
         *)
             return 1
@@ -323,16 +332,26 @@ installV2Ray(){
 
 
 installInitScript(){
-    if [[ -n "${SYSTEMCTL_CMD}" ]]; then
-        if [[ ! -f "/etc/systemd/system/v2ray.service" && ! -f "/lib/systemd/system/v2ray.service" ]]; then
-            unzip -oj "$1" "$2systemd/v2ray.service" -d '/etc/systemd/system' && \
-            systemctl enable v2ray.service
-        fi
-    elif [[ -n "${SERVICE_CMD}" ]] && [[ ! -f "/etc/init.d/v2ray" ]]; then
-        installSoftware 'daemon' && \
-        unzip -oj "$1" "$2systemv/v2ray" -d '/etc/init.d' && \
-        chmod +x '/etc/init.d/v2ray' && \
-        update-rc.d v2ray defaults
+    if [[ ! -f "/etc/systemd/system/v2ray.service" && ! -f "/lib/systemd/system/v2ray.service" ]]; then
+        cat > /etc/systemd/system/v2ray.service <<EOF
+[Unit]
+Description=V2Ray Service
+Documentation=https://www.v2ray.com/ https://www.v2fly.org/
+After=network.target nss-lookup.target
+
+[Service]
+Type=simple
+User=root
+CapabilityBoundingSet=CAP_NET_ADMIN CAP_NET_BIND_SERVICE
+AmbientCapabilities=CAP_NET_ADMIN CAP_NET_BIND_SERVICE
+NoNewPrivileges=true
+ExecStart=/usr/bin/v2ray/v2ray -config /etc/v2ray/config.json
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
+EOF
+        systemctl enable v2ray.service
     fi
 }
 

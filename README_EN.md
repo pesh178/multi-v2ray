@@ -35,6 +35,9 @@ a tool to manage v2ray config json, support multiple user && group manage
   - MTProto
   - Shadowsocks
   - Quic
+  - VLESS
+  - VLESS_XTLS
+  - Trojan
 
 ## How To Use
 new install
